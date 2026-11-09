@@ -1,0 +1,10 @@
+# ne jamais publier la clé de signature
+*.jks
+*.keystore
+android/out/
+android/classes.dex
+android/AndroidManifest.xml
+android/resources.arsc
+vendor/
+*.apk
+__pycache__/
