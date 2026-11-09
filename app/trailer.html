@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- NovaTV — © 2026 Rappace — Logiciel libre sous licence MIT — https://github.com/RappaceFer/NovaTV -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bande-annonce</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+#p,iframe{position:fixed;inset:0;width:100%;height:100%;border:0}
+</style>
+</head>
+<body>
+<div id="p"></div>
+<script>
+/* Page servie par l'application sur une adresse https locale : YouTube exige une
+   origine web pour ses lecteurs intégrés (sinon « erreur 153 »). Les serveurs
+   publicitaires sont bloqués par l'application. Si YouTube refuse la vidéo
+   (âge à confirmer, intégration interdite, vidéo supprimée), on prévient l'app. */
+var q = new URLSearchParams(location.search);
+var id = (q.get('v') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 11);
+var hl = (q.get('hl') || 'fr').replace(/[^a-z]/g, '').slice(0, 3);
+var player = null, started = false;
+function tell(ev, code) { try { parent.postMessage({ nv: 'trailer', ev: ev, code: code }, '*'); } catch (e) { } }
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('p', {
+    host: 'https://www.youtube-nocookie.com',
+    videoId: id,
+    playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, fs: 0, hl: hl, cc_lang_pref: hl, origin: location.origin },
+    events: {
+      onReady: function (e) { e.target.playVideo(); },
+      onStateChange: function (e) { if (e.data === 1) { started = true; tell('playing'); } },
+      onError: function (e) { tell('error', e.data); }
+    }
+  });
+}
+/* rien ne démarre au bout de 15 s : c'est en général l'écran « confirmez votre âge » */
+setTimeout(function () { if (!started) tell('error', 'age'); }, 15000);
+addEventListener('message', function (e) {
+  if (e.source !== parent || e.data !== 'toggle' || !player || !player.getPlayerState) return;
+  if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+});
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
